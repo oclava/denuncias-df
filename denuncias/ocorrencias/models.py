@@ -34,23 +34,18 @@ class Denuncia(models.Model):
         ('rejeitada', 'Rejeitada'),
     ]
 
-    # CATEGORIA_CHOICES = [
-    #     ('crime', 'Crime'),
-    #     ('violencia', 'Violência Doméstica'),
-    #     ('ambiental', 'Ambiental'),
-    #     ('corrupcao', 'Corrupção'),
-    #     ('outros', 'Outros'),
-    # ]
-
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     titulo = models.CharField(max_length=200)
     descricao = models.TextField()
-    localizacao = models.CharField(max_length=255, blank=True, null=True)
+    
+    localizacao = models.CharField(max_length=400, blank=True, null=True, verbose_name="Endereço da Ocorrência")
+    latitude = models.DecimalField(max_digits=30, decimal_places=25, blank=True, null=True)
+    longitude = models.DecimalField(max_digits=30, decimal_places=25, blank=True, null=True)
     
     categoria = models.ForeignKey(
         CategoriaDenuncia,
         on_delete=models.PROTECT,
-        related_name='denuncias', # permite acessar as denúncias de uma categoria
+        related_name='denuncias',
         verbose_name="Categoria"
     )
     

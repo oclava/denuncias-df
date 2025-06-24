@@ -1,8 +1,6 @@
-# denuncias/usuarios/forms.py
-
 from django import forms
 from .models import Usuario 
-from django.forms.widgets import PasswordInput # CORRIGIDO: Importa o widget de PasswordInput de django.forms.widgets
+from django.forms.widgets import PasswordInput
 
 class UsuarioCreationForm(forms.ModelForm):
     password = forms.CharField(
@@ -12,14 +10,14 @@ class UsuarioCreationForm(forms.ModelForm):
             'minlength': '6', 
             'class': 'form-control'
         }),
-        strip=False,
+        strip=False, #removendo espaços em branco
         min_length=6,
         help_text="A senha deve ter no mínimo 6 caracteres."
     )
     
     confirm_password = forms.CharField(
         label="Confirmar Senha",
-        widget=PasswordInput(attrs={
+        widget=PasswordInput(attrs={ #oculta a senha no front
             'placeholder': '********', 
             'class': 'form-control'
         }),
@@ -43,9 +41,9 @@ class UsuarioCreationForm(forms.ModelForm):
 
     def clean_cpf(self):
         cpf = self.cleaned_data.get('cpf')
-        if Usuario.objects.filter(cpf=cpf).exists():
+        if Usuario.objects.filter(cpf=cpf).exists(): #impede de duplicar usuarios no banco
             raise forms.ValidationError("Este CPF já está cadastrado.")
-        if not cpf.isdigit() or len(cpf) != 11:
+        if not cpf.isdigit() or len(cpf) != 11: #valida o formato
             raise forms.ValidationError("O CPF deve conter exatamente 11 dígitos numéricos.")
         return cpf
 

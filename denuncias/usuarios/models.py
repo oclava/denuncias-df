@@ -1,5 +1,3 @@
-# denuncias/usuarios/models.py
-
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from denuncias.ocorrencias.models import Orgao 
@@ -23,9 +21,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     nome = models.CharField(max_length=255)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
-    # NOVO CAMPO: Adicione date_joined aqui
     date_joined = models.DateTimeField(auto_now_add=True)
-    # last_login é fornecido automaticamente por AbstractBaseUser
 
     orgaos_responsavel = models.ManyToManyField(
         Orgao,

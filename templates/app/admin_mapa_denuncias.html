@@ -1,0 +1,95 @@
+{% extends 'app/base.html' %} {# Herda do template base #}
+
+{% block title %}Mapa de Denúncias - Admin - Plataforma de Denúncias{% endblock %}
+
+{% block extra_head %}
+    <!-- Este CSS/JS do Leaflet será injetado pelo map_html, mas é bom ter uma base caso necessário -->
+    <!-- (No entanto, o Folium já inclui o Leaflet no HTML gerado, então estas linhas não são estritamente necessárias aqui) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoCcTcjIT3PrF/LLXL2gmkrFGCSkcMfaREpEDMcc="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjGwZZLG8PTT9FbcAEwADk2K/QyMAy="
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid my-5"> {# Usar container-fluid para mapa ocupar mais espaço #}
+    <div class="card shadow-sm p-4">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4 text-primary">Mapa de Denúncias</h2>
+            <hr>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <i class="bi bi-funnel-fill me-2"></i> Filtros de Denúncias
+                </div>
+                <div class="card-body">
+                    <form method="get" class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label for="status-filter" class="form-label">Status:</label>
+                            <select class="form-select" id="status-filter" name="status">
+                                <option value="">Todos</option>
+                                {% for status_val, status_label in status_choices %}
+                                    <option value="{{ status_val }}" {% if selected_status == status_val %}selected{% endif %}>{{ status_label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="categoria-filter" class="form-label">Categoria:</label>
+                            <select class="form-select" id="categoria-filter" name="categoria">
+                                <option value="">Todas</option>
+                                {% for categoria in categorias %}
+                                    <option value="{{ categoria.id }}" {% if selected_categoria|stringformat:"s" == categoria.id|stringformat:"s" %}selected{% endif %}>{{ categoria.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="orgao-filter" class="form-label">Órgão Designado:</label>
+                            <select class="form-select" id="orgao-filter" name="orgao">
+                                <option value="">Todos</option>
+                                {% for orgao in orgaos %}
+                                    <option value="{{ orgao.id }}" {% if selected_orgao|stringformat:"s" == orgao.id|stringformat:"s" %}selected{% endif %}>{{ orgao.nome }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12 text-center mt-3">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="bi bi-filter-circle-fill me-2"></i> Aplicar Filtros
+                            </button>
+                            <a href="{% url 'ocorrencias:mapa_denuncias' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle-fill me-2"></i> Limpar Filtros
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label text-muted"><i class="bi bi-geo-alt-fill me-1"></i> Denúncias no Mapa:</label>
+                <div id="mapa-container" style="height: 650px; width: 100%; border: 1px solid #dee2e6; border-radius: 8px; overflow: hidden; box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
+                    {{ map_html|safe }}
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{% url 'ocorrencias:admin_dashboard' %}" class="btn btn-secondary btn-lg">
+                    <i class="bi bi-arrow-left-circle-fill me-2"></i> Voltar para o Dashboard Admin
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

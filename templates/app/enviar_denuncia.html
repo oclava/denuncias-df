@@ -1,100 +1,283 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enviar Denúncia - Plataforma de Denúncias</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    </head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
-        <div class="container">
-            <a class="navbar-brand" href="#">Denúncias DF</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="{% url 'ocorrencias:enviar_denuncia' %}">Nova Denúncia</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" aria-current="page" href="{% url 'ocorrencias:dashboard' %}">Minhas Denúncias</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'logout' %}">Sair</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends 'app/base.html' %} {# Indica que este template herda de base.html #}
 
-    <div class="container my-5">
-        <div class="card shadow-sm p-4">
-            <div class="card-body">
-                <h2 class="card-title text-center mb-4 text-primary">Enviar Nova Denúncia</h2>
+{% block title %}Enviar Nova Denúncia{% endblock %} {# Define o título da página #}
+
+{% block extra_head %}
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin="anonymous"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin="anonymous"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"
+            integrity="sha256-Al4Yboda3DL1gAWuImhpr3IvUayTY0SRcavGw2QqnaY=" /* Este hash é um exemplo. Sempre verifique o correto! */
+            crossorigin="anonymous"></script> 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css"
+          integrity="sha256-B4j2o1uIqjrUGgCj7CIUWs0HlH9e4FshC3L27DtLBo8=" /* Este hash é um exemplo. Sempre verifique o correto! */
+          crossorigin="anonymous" /> 
+    </head>
+{% endblock %}
+
+{% block content %}
+<div class="container my-5"> {# Este container já está no seu HTML atual #}
+    <div class="card shadow-sm p-4">
+        <div class="card-body">
+            <h2 class="card-title text-center mb-4 text-primary">Enviar Nova Denúncia</h2>
+            
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
                 
-                <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
-                    {% csrf_token %}
-                    
-                    {% for field in form %}
+                {# Bloco de erros globais do formulário #}
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <p><strong>Erro ao enviar denúncia:</strong></p>
+                        <ul>
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                {# Loop para renderizar os campos do formulário #}
+                {% for field in form %}
+                    {% if field.name == 'latitude' or field.name == 'longitude' %}
+                        {{ field }}
+                    {% elif field.name == 'localizacao' %}
                         <div class="mb-3">
-                            {{ field.label_tag }}
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
                             {{ field }}
-                            {% if field.help_text %}
-                                <div class="form-text text-muted">{{ field.help_text }}</div>
-                            {% endif %}
                             {% for error in field.errors %}
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
+                            {% if field.help_text %}
+                                <div class="form-text text-muted">{{ field.help_text }}</div>
+                            {% endif %}
                         </div>
-                    {% endfor %}
+                        <div class="mb-3">
+                            <label class="form-label">Selecione a Localização no Mapa:</label>
+                            <div id="mapid" style="height: 400px; width: 100%; border: 1px solid #ccc; border-radius: 5px;"></div>
+                            <small class="form-text text-muted">Clique no mapa para definir a localização exata da denúncia.</small>
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {% for error in field.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                            {% if field.help_text %}
+                                <div class="form-text text-muted">{{ field.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
 
-                    <div class="d-grid gap-2 mt-4">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-send-fill me-2"></i> Enviar Denúncia
-                        </button>
-                    </div>
-                </form>
-
-            </div>
-        </div>
-
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} mt-4" role="alert">
-                    {{ message }}
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-send-fill me-2"></i> Enviar Denúncia
+                    </button>
                 </div>
-            {% endfor %}
-        {% endif %}
+            </form>
+
+        </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script>
-        // Adicionar a classe 'is-invalid' para campos com erros de validação
-        document.addEventListener('DOMContentLoaded', function() {
-            var form = document.querySelector('.needs-validation');
-            form.querySelectorAll('.invalid-feedback').forEach(function(feedback) {
-                var input = feedback.previousElementSibling; // Pega o input/select/textarea antes do feedback
-                if (input && input.classList.contains('form-control') || input.classList.contains('form-select')) {
+    {# Mensagens do Django (success, error, etc.) #}
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} mt-4" role="alert">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Script para adicionar a classe 'is-invalid' para campos com erros de validação
+    document.addEventListener('DOMContentLoaded', function() {
+        var formElement = document.querySelector('.needs-validation');
+        if (formElement) {
+            formElement.querySelectorAll('.invalid-feedback').forEach(function(feedback) {
+                var input = feedback.previousElementSibling;
+                if (input && (input.classList.contains('form-control') || input.classList.contains('form-select')) && input.type !== 'hidden') {
                     input.classList.add('is-invalid');
                 }
             });
-        });
+        }
+    });
 
-        // Habilita a validação visual do Bootstrap (já estava no seu código)
-        (function () {
-            'use strict'
-            var form = document.querySelector('.needs-validation')
-            form.addEventListener('submit', function (event) {
-                if (!form.checkValidity()) {
-                    event.preventDefault()
-                    event.stopPropagation()
-                }
-                form.classList.add('was-validated')
-            }, false)
-        })()
-    </script>
-</body>
-</html>
+    // Habilita a validação visual do Bootstrap
+    (function () {
+        'use strict';
+        var forms = document.querySelectorAll('.needs-validation');
+        Array.prototype.slice.call(forms)
+            .forEach(function (formElement) {
+                formElement.addEventListener('submit', function (event) {
+                    if (!formElement.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    formElement.classList.add('was-validated');
+                }, false);
+            });
+    })();
+
+    // --- FUNÇÃO PARA FORMATAR O ENDEREÇO (AGORA INCLUI NOME DO ESTABELECIMENTO) ---
+    // Adicione um parâmetro 'resultName' que é o nome principal do resultado da geocodificação
+    function formatAddress(resultName, addressProperties) {
+        let parts = [];
+
+        // NOVO: Tenta adicionar o nome do estabelecimento/ponto de interesse primeiro
+        // O 'resultName' é o nome completo dado pelo Nominatim (e.geocode.name ou results[0].name)
+        // Se ele não for apenas um endereço numérico ou uma rua, considerá-lo como nome de estabelecimento.
+        // Evitamos nomes genéricos ou que são apenas endereços formatados.
+        if (resultName && typeof resultName === 'string') {
+            // Heurística para tentar distinguir nome de estabelecimento de um endereço simples.
+            // Se o nome não contém números (tipo "Rua A, 123") e não é um nome de rua óbvio.
+            // Esta lógica pode precisar ser ajustada para seus dados específicos do DF.
+            const isAddressLike = /\d/.test(resultName) || resultName.toLowerCase().includes('rua') || resultName.toLowerCase().includes('avenida');
+            
+            if (!isAddressLike && resultName.toLowerCase() !== addressProperties.road.toLowerCase()) { // Evita duplicar rua
+                parts.push(resultName);
+            }
+            // Outras chaves de estabelecimento que podem estar em addressProperties
+            else if (addressProperties.shop) {
+                parts.push(addressProperties.shop);
+            } else if (addressProperties.amenity) {
+                parts.push(addressProperties.amenity);
+            } else if (addressProperties.building && !parts.includes(addressProperties.building)) { // Se for um nome de prédio
+                parts.push(addressProperties.building);
+            }
+        }
+
+        // Restante da lógica de formatação do endereço como antes
+        if (addressProperties.road && (!parts.length || !parts[0].toLowerCase().includes(addressProperties.road.toLowerCase()))) {
+             parts.push(addressProperties.road);
+        }
+        if (addressProperties.house_number) {
+            parts.push(addressProperties.house_number);
+        } else if (addressProperties.neighbourhood && addressProperties.neighbourhood.toLowerCase().includes('chácara') && !parts.includes(addressProperties.neighbourhood)) {
+            parts.push(addressProperties.neighbourhood);
+        }
+        
+        if (addressProperties.suburb && !parts.includes(addressProperties.suburb) && !(addressProperties.road && addressProperties.road.includes(addressProperties.suburb))) {
+            parts.push(addressProperties.suburb);
+        } else if (addressProperties.neighbourhood && !parts.includes(addressProperties.neighbourhood) && !(addressProperties.road && addressProperties.road.includes(addressProperties.neighbourhood))) {
+            parts.push(addressProperties.neighbourhood);
+        }
+
+        if (addressProperties.city && addressProperties.city !== 'Distrito Federal') {
+            parts.push(addressProperties.city);
+        } else if (addressProperties.town && addressProperties.town !== 'Distrito Federal') {
+            parts.push(addressProperties.town);
+        }
+
+        if (addressProperties.state === 'Distrito Federal' || addressProperties.county === 'Distrito Federal') {
+            parts.push('DF');
+        }
+
+        if (addressProperties.postcode) {
+            parts.push(addressProperties.postcode);
+        }
+        
+        let finalAddress = [];
+        let seen = new Set();
+        for (let part of parts) {
+            if (part && typeof part === 'string' && !seen.has(part.toLowerCase())) {
+                finalAddress.push(part);
+                seen.add(part.toLowerCase());
+            }
+        }
+
+        return finalAddress.join(', ');
+    }
+
+
+    // --- Código do Mapa Leaflet ---
+    var map = L.map('mapid').setView([-15.7801, -47.9292], 12);
+    var marker;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    var geocoder = L.Control.Geocoder.nominatim();
+    L.Control.geocoder({
+        geocoder: geocoder,
+        placeholder: "Buscar endereço..."
+    }).on('markgeocode', function(e) {
+        var bbox = e.geocode.bbox;
+        var center = e.geocode.center;
+        var addressProperties = e.geocode.properties.address;
+        var resultName = e.geocode.name; // Pega o nome principal do resultado
+
+        if (marker) {
+            map.removeLayer(marker);
+        }
+
+        marker = L.marker(center).addTo(map)
+            .bindPopup(resultName) // Popup pode continuar mostrando o nome completo
+            .openPopup();
+        
+        document.getElementById('id_latitude').value = center.lat;
+        document.getElementById('id_longitude').value = center.lng;
+        
+        // NOVO: Passa resultName para a função formatAddress
+        document.getElementById('id_localizacao').value = formatAddress(resultName, addressProperties);
+
+        map.fitBounds(bbox);
+    }).addTo(map);
+
+    // Função para adicionar/mover marcador ao clicar no mapa
+    map.on('click', function(e) {
+        if (marker) {
+            map.removeLayer(marker);
+        }
+        marker = L.marker(e.latlng).addTo(map);
+        
+        document.getElementById('id_latitude').value = e.latlng.lat;
+        document.getElementById('id_longitude').value = e.latlng.lng;
+
+        geocoder.reverse(e.latlng, map.options.crs.scale(map.getZoom()), function(results) {
+            if (results && results.length > 0) {
+                var addressProperties = results[0].properties.address;
+                var resultName = results[0].name; // Pega o nome principal do resultado
+
+                // NOVO: Passa resultName para a função formatAddress
+                document.getElementById('id_localizacao').value = formatAddress(resultName, addressProperties);
+                marker.bindPopup(resultName).openPopup();
+            } else {
+                document.getElementById('id_localizacao').value = 'Localização selecionada no mapa';
+                marker.bindPopup('Localização selecionada no mapa').openPopup();
+            }
+        });
+    });
+
+    // Se já houver latitude/longitude no formulário (ex: erro de validação ao submeter)
+    var initialLat = document.getElementById('id_latitude').value;
+    var initialLon = document.getElementById('id_longitude').value;
+    if (initialLat && initialLon) {
+        var initialLatLng = L.latLng(parseFloat(initialLat), parseFloat(initialLon));
+        marker = L.marker(initialLatLng).addTo(map);
+        map.setView(initialLatLng, 15);
+        
+        geocoder.reverse(initialLatLng, map.options.crs.scale(map.getZoom()), function(results) {
+            if (results && results.length > 0) {
+                var addressProperties = results[0].properties.address;
+                var resultName = results[0].name; // Pega o nome principal do resultado
+                
+                // NOVO: Passa resultName para a função formatAddress
+                document.getElementById('id_localizacao').value = formatAddress(resultName, addressProperties);
+                marker.bindPopup(resultName).openPopup();
+            } else {
+                marker.bindPopup('Localização previamente selecionada').openPopup();
+            }
+        });
+    }
+
+</script>
+{% endblock %}

@@ -1,10 +1,16 @@
 from django import forms
 from .models import Denuncia
 
+from django import forms
+from .models import Denuncia, Orgao, CategoriaDenuncia
+
 class DenunciaForm(forms.ModelForm):
+    latitude = forms.DecimalField(max_digits=30, decimal_places=25, required=False, widget=forms.HiddenInput())
+    longitude = forms.DecimalField(max_digits=30, decimal_places=25, required=False, widget=forms.HiddenInput())
+
     class Meta:
         model = Denuncia
-        fields = ['titulo', 'descricao', 'categoria', 'localizacao', 'anexo']
+        fields = ['titulo', 'descricao', 'categoria', 'localizacao', 'latitude', 'longitude', 'anexo']
         widgets = {
             'titulo': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -24,9 +30,9 @@ class DenunciaForm(forms.ModelForm):
             }),
             'localizacao': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Ex: Rua das Flores, Quadra 10, Lote 5, Taguatinga-DF',
-                'maxlength': '255',
-                'blank': True
+                'placeholder': 'Será preenchido automaticamente ao clicar no mapa ou digite aqui.',
+                'maxlength': '400',
+                'blank': True 
             }),
             'anexo': forms.FileInput(attrs={
                 'class': 'form-control',
@@ -38,18 +44,18 @@ class DenunciaForm(forms.ModelForm):
             'titulo': 'Título da Denúncia*',
             'descricao': 'Descrição Detalhada*',
             'categoria': 'Categoria*',
-            'localizacao': 'Localização (opcional)',
+            'localizacao': 'Localização da Ocorrência',
             'anexo': 'Anexar Prova (opcional)'
         }
         help_texts = {
-            'localizacao': 'Se souber, informe o endereço exato ou ponto de referência.',
+            'localizacao': 'Clique no mapa para definir a localização exata ou digite o endereço.',
             'anexo': 'Formatos aceitos: JPG, PNG, PDF, MP4 (até 5MB)'
         }
+
 
 class AdminDenunciaAssignmentForm(forms.ModelForm):
     class Meta:
         model = Denuncia
-        # AQUI ESTÁ A MUDANÇA: Use 'orgaos_designados' em vez de 'orgao_competente'
         fields = ['status', 'orgaos_designados'] 
         widgets = {
             'status': forms.Select(attrs={'class': 'form-select'}),

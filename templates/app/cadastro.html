@@ -1,118 +1,100 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cadastro - Plataforma de Denúncias</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-  <link rel="stylesheet" href="{% static 'app/css/styles.css' %}">
-</head>
+{% extends 'app/base.html' %} {# Herda do template base #}
 
-<body class="bg-light">
-  <div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <div class="card shadow-sm p-4 register-card">
-      <div class="card-body">
-        <h2 class="card-title text-center mb-4 text-primary">Cadastro</h2>
+{% block title %}Cadastro - Plataforma de Denúncias{% endblock %}
 
-        {# Exibir mensagens do Django (ex: cadastro com sucesso, erro) #}
-        {% if messages %}
-            <div class="mb-3">
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+{# Não há extra_head ou extra_js específicos para o Leaflet aqui #}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center min-vh-100">
+  <div class="card shadow-sm p-4 register-card">
+    <div class="card-body">
+      <h2 class="card-title text-center mb-4 text-primary">Cadastro</h2>
+
+      {% if messages %}
+          <div class="mb-3">
+              {% for message in messages %}
+                  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                      {{ message }}
+                      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                  </div>
+              {% endfor %}
+          </div>
+      {% endif %}
+
+      <form action="{% url 'cadastro' %}" method="POST" class="needs-validation" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+                {% for error in form.non_field_errors %}
+                    {{ error }}
                 {% endfor %}
             </div>
         {% endif %}
 
-        <form action="{% url 'cadastro' %}" method="POST" class="needs-validation" novalidate>
-          {% csrf_token %}
-
-          {# Exibir erros que não estão ligados a um campo específico (ex: senhas não coincidem) #}
-          {% if form.non_field_errors %}
-              <div class="alert alert-danger" role="alert">
-                  {% for error in form.non_field_errors %}
-                      {{ error }}
-                  {% endfor %}
+        {% for field in form %}
+          <div class="mb-3">
+            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}
+                <div class="form-text">{{ field.help_text }}</div>
+            {% endif %}
+            {% for error in field.errors %}
+              <div class="invalid-feedback d-block">
+                {{ error }}
               </div>
-          {% endif %}
-
-          {# Loop para renderizar os campos do formulário Django #}
-          {% for field in form %}
-            <div class="mb-3">
-              <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-              {{ field }}
-              {# Exibir erros específicos do campo #}
-              {% if field.help_text %}
-                  <div class="form-text">{{ field.help_text }}</div>
-              {% endif %}
-              {% for error in field.errors %}
-                <div class="invalid-feedback d-block"> {# d-block para exibir sempre #}
-                  {{ error }}
-                </div>
-              {% endfor %}
-            </div>
-          {% endfor %}
-
-          <div class="d-grid gap-2 mb-3">
-            <button type="submit" class="btn btn-primary">Cadastrar</button>
+            {% endfor %}
           </div>
+        {% endfor %}
 
-          <p class="text-center text-muted">
-            Já tem uma conta? <a href="{% url 'login' %}" class="text-decoration-none">Faça login aqui</a>
-          </p>
-        </form>
-      </div>
+        <div class="d-grid gap-2 mb-3">
+          <button type="submit" class="btn btn-primary">Cadastrar</button>
+        </div>
+
+        <p class="text-center text-muted">
+          Já tem uma conta? <a href="{% url 'login' %}" class="text-decoration-none">Faça login aqui</a>
+        </p>
+      </form>
     </div>
   </div>
+</div>
+{% endblock %}
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
-  <script>
-    // A validação JavaScript aqui pode ser simplificada.
-    // A validação de "senhas não coincidem" será tratada primariamente pelo formulário Django.
-    // Este script agora apenas garante que as classes de validação do Bootstrap sejam aplicadas.
-    (function () {
-      'use strict'
-      var forms = document.querySelectorAll('.needs-validation')
-      Array.prototype.slice.call(forms)
-        .forEach(function (form) {
-          form.addEventListener('submit', function (event) {
-            // Se as senhas não coincidem, o Django Form vai adicionar um non_field_error.
-            // Para feedback visual imediato antes do POST, você pode manter uma checagem JS,
-            // mas remova a customValidity que conflitua com a validação do Django.
-            const password = document.getElementById('id_senha'); // ID gerado pelo Django, se o campo for 'senha'
-            const confirmPassword = document.getElementById('id_confirm_senha'); // ID gerado pelo Django
+{% block extra_js %}
+<script>
+  (function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+      .forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+          const password = document.getElementById('id_senha');
+          const confirmPassword = document.getElementById('id_confirm_senha');
 
-            // Exemplo de como você adaptaria a validação de senha no JS para Bootstrap
-            if (password && confirmPassword) { // Verifique se os elementos existem
-                if (password.value !== confirmPassword.value) {
-                    confirmPassword.classList.add('is-invalid');
-                    // Exemplo de como adicionar uma mensagem de feedback
-                    if (!confirmPassword.nextElementSibling || !confirmPassword.nextElementSibling.classList.contains('invalid-feedback')) {
-                        const feedbackDiv = document.createElement('div');
-                        feedbackDiv.classList.add('invalid-feedback', 'd-block');
-                        feedbackDiv.textContent = 'As senhas não coincidem.';
-                        confirmPassword.parentNode.insertBefore(feedbackDiv, confirmPassword.nextSibling);
-                    }
-                } else {
-                    confirmPassword.classList.remove('is-invalid');
-                    if (confirmPassword.nextElementSibling && confirmPassword.nextElementSibling.classList.contains('invalid-feedback')) {
-                        confirmPassword.nextElementSibling.remove();
-                    }
-                }
-            }
+          if (password && confirmPassword) {
+              if (password.value !== confirmPassword.value) {
+                  confirmPassword.classList.add('is-invalid');
+                  if (!confirmPassword.nextElementSibling || !confirmPassword.nextElementSibling.classList.contains('invalid-feedback')) {
+                      const feedbackDiv = document.createElement('div');
+                      feedbackDiv.classList.add('invalid-feedback', 'd-block');
+                      feedbackDiv.textContent = 'As senhas não coincidem.';
+                      confirmPassword.parentNode.insertBefore(feedbackDiv, confirmPassword.nextSibling);
+                  }
+              } else {
+                  confirmPassword.classList.remove('is-invalid');
+                  if (confirmPassword.nextElementSibling && confirmPassword.nextElementSibling.classList.contains('invalid-feedback')) {
+                      confirmPassword.nextElementSibling.remove();
+                  }
+              }
+          }
 
-
-            if (!form.checkValidity()) {
-              event.preventDefault()
-              event.stopPropagation()
-            }
-            form.classList.add('was-validated')
-          }, false)
-        })
-    })()
-  </script>
-</body>
-</html>
+          if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+          }
+          form.classList.add('was-validated')
+        }, false)
+      })
+  })()
+</script>
+{% endblock %}

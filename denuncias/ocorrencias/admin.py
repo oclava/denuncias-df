@@ -3,10 +3,10 @@ from .models import CategoriaDenuncia, Denuncia, Orgao
 
 @admin.register(CategoriaDenuncia)
 class CategoriaDenunciaAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'descricao') # Campos para exibir na lista do admin
-    search_fields = ('nome',) # Campos para pesquisa
+    list_display = ('nome', 'descricao') 
+    search_fields = ('nome',) 
 
-# Registra o modelo denuncia
+
 @admin.register(Denuncia)
 class DenunciaAdmin(admin.ModelAdmin):
     list_display = ('titulo', 'categoria', 'status', 'data_criacao')
@@ -17,13 +17,11 @@ class DenunciaAdmin(admin.ModelAdmin):
         (None, {'fields': ('titulo', 'descricao', 'categoria', 'status')}),
         ('Localização e Anexos', {'fields': ('localizacao', 'anexo')}),
         ('Atribuição', {'fields': ('orgaos_designados',)}),
-        ('Informações do Sistema', {'fields': ('usuario', 'data_criacao', 'ultima_atualizacao')}), # Adicionado para exibir campos automáticos
+        ('Informações do Sistema', {'fields': ('usuario', 'data_criacao', 'ultima_atualizacao')}), 
     )
-    # Define campos que não devem ser editáveis no admin
     readonly_fields = ('usuario', 'data_criacao', 'ultima_atualizacao')
 
 
-# Registra o modelo Orgao
 @admin.register(Orgao)
 class OrgaoAdmin(admin.ModelAdmin):
     list_display = ('sigla', 'nome')
